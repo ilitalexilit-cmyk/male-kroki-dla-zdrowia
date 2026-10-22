@@ -1,1 +1,245 @@
-<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Małe kroki dla zdrowia</title><style>:root{font-family:system-ui,-apple-system,sans-serif;color:#20342e;background:#f5f8f5}*{box-sizing:border-box}body{margin:0}main{max-width:880px;margin:auto;padding:22px 16px 60px}h1{font-size:clamp(29px,5vw,44px);margin:8px 0}p{line-height:1.5}.muted{color:#66776e}.panel{background:white;border:1px solid #dce9df;border-radius:20px;padding:20px;margin:18px 0;box-shadow:0 4px 20px #163a2310}.eyebrow{color:#28744a;font-weight:700;font-size:13px;letter-spacing:.07em;text-transform:uppercase}.days{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}.day{border:1px solid #d4e5d9;border-radius:13px;padding:12px 4px;background:white;color:#20342e;cursor:pointer;font-weight:700}.day.active{background:#226e48;color:white}.day small{display:block;margin-top:4px;font-weight:400}.habit{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid #edf1ed;cursor:pointer}.habit input{width:24px;height:24px;accent-color:#28744a}.habit strong{display:block}.habit span{font-size:13px;color:#69796f}.moods{display:flex;flex-wrap:wrap;gap:8px}.moods button{padding:12px 15px;border:1px solid #cbded1;background:#fff;border-radius:12px;cursor:pointer;font-size:20px}.moods button.selected{background:#d5f1df;border-color:#28744a}.moods button small{display:block;font-size:12px}.progress{height:14px;background:#e5efe8;border-radius:20px;overflow:hidden}.fill{height:100%;background:#399b62;width:0;transition:width .2s}.stats{display:flex;gap:16px;flex-wrap:wrap}.stat{flex:1;min-width:110px;background:#f3f9f5;border-radius:14px;padding:16px}.stat b{display:block;font-size:27px;color:#216f47}.footer{font-size:13px;color:#69796f}textarea{width:100%;border:1px solid #cbded1;border-radius:12px;padding:12px;font:inherit;min-height:85px}button:focus-visible,input:focus-visible{outline:3px solid #e8ac40;outline-offset:2px}@media(max-width:550px){.days{gap:4px}.day{font-size:12px;padding:10px 0}.panel{padding:15px}.moods button{flex:1;padding:9px 4px}}@media print{body{background:white}main{max-width:none}.panel{box-shadow:none;break-inside:avoid}.footer{display:none}}</style></head><body><main><div class="eyebrow">Projekt edukacyjny · 7 dni</div><h1>🌱 Małe kroki dla zdrowia</h1><p class="muted">Czy małe, codzienne działania mogą pomóc nam lepiej zadbać o zdrowie? Sprawdzam to przez 7 dni!</p><section class="panel"><h2>Wybierz dzień</h2><div class="days" id="days"></div><p class="muted" id="selected"></p></section><section class="panel"><h2>Moje 3 małe nawyki</h2><label class="habit"><input type="checkbox" id="h0"><div><strong>🤸 5 minut ruchu</strong><span>Rozciąganie, taniec, spacer lub kilka ćwiczeń.</span></div></label><label class="habit"><input type="checkbox" id="h1"><div><strong>🖥️ Przerwa od ekranu</strong><span>Krótka przerwa na odpoczynek oczu i zmianę pozycji.</span></div></label><label class="habit"><input type="checkbox" id="h2"><div><strong>🌙 Spokojny wieczór</strong><span>Chwila wyciszenia przed snem.</span></div></label></section><section class="panel"><h2>Jak się dziś czuję?</h2><div class="moods" id="moods"></div><h3>Moja krótka obserwacja (opcjonalnie)</h3><textarea id="note" placeholder="Co było łatwe? Co było trudne? Co zauważyłem?"></textarea></section><section class="panel" id="summary"><h2>Podsumowanie tygodnia</h2><div class="stats"><div class="stat"><b id="count">0/21</b><span>wykonanych działań</span></div><div class="stat"><b id="pct">0%</b><span>realizacji planu</span></div><div class="stat"><b id="moodCount">0/7</b><span>dni z oceną samopoczucia</span></div></div><p>Postęp tygodnia</p><div class="progress"><div class="fill" id="fill"></div></div><h3>Wyniki według nawyków</h3><div id="habitStats"></div><h3>Mój wniosek po 7 dniach</h3><textarea id="conclusion" placeholder="Który nawyk był najłatwiejszy? Co mi pomagało? Czy zauważyłem zmianę?"></textarea><p class="muted">Zrób zrzuty ekranu tej sekcji i kalendarza, aby pokazać wyniki projektu.</p></section><p class="footer">Dane zapisują się tylko w tej przeglądarce, na tym urządzeniu. Nie usuwaj danych przeglądarki przed zakończeniem projektu. To obserwacja własnych nawyków, a nie badanie medyczne.</p></main><script>const key='male-kroki-v1',names=['5 minut ruchu','Przerwa od ekranu','Spokojny wieczór'],faces=['😟','😐','🙂','😄'];let data;try{data=JSON.parse(localStorage.getItem(key))||{}}catch{data={}}if(!Array.isArray(data.days)||data.days.length!==7)data.days=Array.from({length:7},()=>({habits:[false,false,false],mood:null,note:''}));let current=0;const el=id=>document.getElementById(id);function save(){localStorage.setItem(key,JSON.stringify(data))}function render(){el('days').innerHTML='';data.days.forEach((d,i)=>{let b=document.createElement('button');b.className='day'+(i===current?' active':'');b.innerHTML='Dzień '+(i+1)+'<small>'+d.habits.filter(Boolean).length+'/3 ✓</small>';b.onclick=()=>{current=i;render()};el('days').appendChild(b)});el('selected').textContent='Dzień '+(current+1)+' z 7';let d=data.days[current];for(let i=0;i<3;i++)el('h'+i).checked=!!d.habits[i];el('moods').innerHTML='';faces.forEach((face,i)=>{let b=document.createElement('button');b.className=d.mood===i?'selected':'';b.setAttribute('aria-label','Samopoczucie '+(i+1)+' z 4');b.innerHTML=face+'<small>'+(i+1)+'/4</small>';b.onclick=()=>{d.mood=i;save();render()};el('moods').appendChild(b)});el('note').value=d.note||'';el('conclusion').value=data.conclusion||'';let n=data.days.reduce((s,x)=>s+x.habits.filter(Boolean).length,0),p=Math.round(n/21*100);el('count').textContent=n+'/21';el('pct').textContent=p+'%';el('fill').style.width=p+'%';el('moodCount').textContent=data.days.filter(x=>x.mood!==null).length+'/7';el('habitStats').innerHTML=names.map((name,i)=>'<p>'+name+': <strong>'+data.days.filter(x=>x.habits[i]).length+'/7 dni</strong></p>').join('')}for(let i=0;i<3;i++)el('h'+i).onchange=e=>{data.days[current].habits[i]=e.target.checked;save();render()};el('note').oninput=e=>{data.days[current].note=e.target.value;save()};el('conclusion').oninput=e=>{data.conclusion=e.target.value;save()};render();</script></body></html>
+
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Małe kroki dla zdrowia — dziennik 7 dni</title>
+<style>
+:root{font-family:system-ui,-apple-system,sans-serif;color:#20342e;background:#f5f8f5}
+*{box-sizing:border-box}
+body{margin:0;padding:24px}
+main{max-width:1050px;margin:auto}
+h1{font-size:clamp(30px,5vw,44px);margin:10px 0}
+h2{font-size:23px}
+p{color:#61766b;line-height:1.5}
+.eyebrow{font-size:13px;font-weight:800;letter-spacing:1.5px;color:#21704b}
+.card{background:white;border:1px solid #d7e7da;border-radius:20px;padding:22px;margin:18px 0;box-shadow:0 5px 20px #193d2410}
+.profiles{display:flex;gap:10px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;border:1px solid #cfe3d3;background:white;color:#20342e;border-radius:12px;padding:12px 18px;font-weight:700}
+button.active{background:#20724d;color:white}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:660px}
+th,td{border-bottom:1px solid #e3eee5;padding:13px 9px;text-align:center}
+th:first-child,td:first-child{text-align:left}
+th{font-size:13px;color:#526a5b}
+input[type=checkbox]{width:23px;height:23px;accent-color:#20724d;cursor:pointer}
+select,textarea{font:inherit;border:1px solid #cfe0d3;border-radius:10px;padding:9px;width:100%;background:white;color:#20342e}
+textarea{min-height:80px;resize:vertical}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.stat{background:#eff7f0;border-radius:14px;padding:18px;text-align:center}
+.stat strong{font-size:30px;color:#20724d;display:block}
+.stat span{font-size:13px;color:#5e7365}
+.bar{height:14px;background:#e4eee6;border-radius:20px;overflow:hidden}
+.fill{height:100%;background:#20724d;width:0%;transition:width .2s}
+.note{font-size:13px}
+@media(max-width:600px){body{padding:12px}.card{padding:15px}.stats{grid-template-columns:1fr}}
+@media print{button{display:none}.card{break-inside:avoid}body{background:white}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<div class="eyebrow">PROJEKT EDUKACYJNY · 7 DNI</div>
+<h1>🌱 Małe kroki dla zdrowia</h1>
+<p>Czy małe, codzienne działania mogą pomóc nam lepiej zadbać o zdrowie? Sprawdzamy to przez 7 dni!</p>
+</header>
+
+<section class="card">
+<h2>Wybierz swój profil</h2>
+<div class="profiles">
+<button id="zenia" onclick="switchProfile('zenia')">Żenia</button>
+<button id="kiryl" onclick="switchProfile('kiryl')">Kirył</button>
+</div>
+<p class="note">Każdy uczestnik ma własny dziennik. Wyniki zapisują się automatycznie w tej przeglądarce.</p>
+</section>
+
+<section class="card">
+<h2>Dziennik tygodniowy — <span id="personName">Żenia</span></h2>
+<p>Zaznacz wykonane działania. Możesz również zapisać swoje samopoczucie każdego dnia.</p>
+<div class="tablewrap">
+<table>
+<thead>
+<tr>
+<th>Dzień</th>
+<th>🏃 5 minut ruchu</th>
+<th>🖥️ Przerwa od ekranu</th>
+<th>🌙 Spokojny wieczór</th>
+<th>Samopoczucie</th>
+</tr>
+</thead>
+<tbody id="days"></tbody>
+</table>
+</div>
+</section>
+
+<section class="card">
+<h2>Moje postępy</h2>
+<div class="stats">
+<div class="stat"><strong id="completed">0</strong><span>wykonanych działań</span></div>
+<div class="stat"><strong id="percent">0%</strong><span>realizacji planu</span></div>
+<div class="stat"><strong id="activeDays">0</strong><span>aktywnych dni</span></div>
+</div>
+<p>Postęp tygodniowy</p>
+<div class="bar"><div class="fill" id="progress"></div></div>
+<p class="note">Łącznie można wykonać 21 działań: 3 na każdy z 7 dni.</p>
+</section>
+
+<section class="card">
+<h2>Moje obserwacje</h2>
+<p>Co było łatwe? Co sprawiało trudność? Czy zauważyłem zmianę samopoczucia?</p>
+<textarea id="observations" placeholder="Zapisz swoje obserwacje..."></textarea>
+<h2>Wnioski po 7 dniach</h2>
+<textarea id="conclusions" placeholder="Czego nauczyłem się podczas eksperymentu?"></textarea>
+</section>
+
+<section class="card">
+<h2>O projekcie</h2>
+<p><strong>Cel:</strong> Sprawdzenie, czy małe, regularne działania pomagają rozwijać zdrowe nawyki.</p>
+<p><strong>Metoda:</strong> Przez siedem dni zapisujemy wykonane działania i oceniamy samopoczucie.</p>
+<p><strong>Ważne:</strong> Nasze obserwacje są subiektywne. Siedmiodniowy eksperyment nie dowodzi, że stan zdrowia uległ zmianie.</p>
+<button onclick="window.print()">🖨️ Drukuj lub zapisz jako PDF</button>
+</section>
+</main>
+
+<script>
+const STORAGE_KEY = "male-kroki-dla-zdrowia-profile-v1";
+const OLD_KEYS = [
+  "male-kroki-dla-zdrowia",
+  "male-kroki-7-dni"
+];
+
+let profile = "zenia";
+
+function emptyData() {
+  return {
+    habits: Array.from({length:7},()=>[false,false,false]),
+    moods: Array(7).fill(""),
+    observations:"",
+    conclusions:""
+  };
+}
+
+function loadAll() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if(saved && typeof saved === "object") return saved;
+  } catch(e) {}
+  return {zenia:emptyData(),kiryl:emptyData()};
+}
+
+let allData = loadAll();
+
+function save() {
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(allData));
+}
+
+function current() {
+  if(!allData[profile]) allData[profile]=emptyData();
+  return allData[profile];
+}
+
+function switchProfile(name) {
+  profile=name;
+  render();
+}
+
+function setHabit(day,habit,checked) {
+  current().habits[day][habit]=checked;
+  save();
+  updateStats();
+}
+
+function setMood(day,value) {
+  current().moods[day]=value;
+  save();
+}
+
+function updateStats() {
+  const data=current();
+  let completed=0;
+  let activeDays=0;
+  for(const row of data.habits) {
+    const count=row.filter(Boolean).length;
+    completed+=count;
+    if(count>0) activeDays++;
+  }
+  const percentage=Math.round(completed/21*100);
+  document.getElementById("completed").textContent=completed;
+  document.getElementById("percent").textContent=percentage+"%";
+  document.getElementById("activeDays").textContent=activeDays;
+  document.getElementById("progress").style.width=percentage+"%";
+}
+
+function render() {
+  const data=current();
+  document.getElementById("personName").textContent=
+    profile==="zenia"?"Żenia":"Kirył";
+
+  document.getElementById("zenia").classList.toggle("active",profile==="zenia");
+  document.getElementById("kiryl").classList.toggle("active",profile==="kiryl");
+
+  const tbody=document.getElementById("days");
+  tbody.innerHTML="";
+
+  for(let day=0;day<7;day++) {
+    const tr=document.createElement("tr");
+    const title=document.createElement("td");
+    title.textContent="Dzień "+(day+1);
+    title.style.fontWeight="700";
+    tr.appendChild(title);
+
+    for(let habit=0;habit<3;habit++) {
+      const td=document.createElement("td");
+      const checkbox=document.createElement("input");
+      checkbox.type="checkbox";
+      checkbox.checked=Boolean(data.habits?.[day]?.[habit]);
+      checkbox.addEventListener("change",()=>{
+        setHabit(day,habit,checkbox.checked);
+      });
+      td.appendChild(checkbox);
+      tr.appendChild(td);
+    }
+
+    const moodCell=document.createElement("td");
+    const select=document.createElement("select");
+    const options=[
+      ["","— Wybierz —"],
+      ["5","😄 Bardzo dobrze"],
+      ["4","🙂 Dobrze"],
+      ["3","😐 Średnio"],
+      ["2","😕 Słabo"],
+      ["1","😞 Bardzo słabo"]
+    ];
+    for(const [value,label] of options) {
+      const option=document.createElement("option");
+      option.value=value;
+      option.textContent=label;
+      select.appendChild(option);
+    }
+    select.value=data.moods?.[day]||"";
+    select.addEventListener("change",()=>setMood(day,select.value));
+    moodCell.appendChild(select);
+    tr.appendChild(moodCell);
+    tbody.appendChild(tr);
+  }
+
+  document.getElementById("observations").value=data.observations||"";
+  document.getElementById("conclusions").value=data.conclusions||"";
+  updateStats();
+}
+
+document.getElementById("observations").addEventListener("input",e=>{
+  current().observations=e.target.value;
+  save();
+});
+
+document.getElementById("conclusions").addEventListener("input",e=>{
+  current().conclusions=e.target.value;
+  save();
+});
+
+render();
+</script>
+</body>
+</html>
